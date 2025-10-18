@@ -905,17 +905,6 @@ namespace FindAndReplace.App
 			return result;
 		}
 
-		private void aboutToolStripMenuItem_Click_1(object sender, EventArgs e)
-		{
-			AboutBox aboutBox = new AboutBox();
-			aboutBox.ShowDialog();
-		}
-
-		private void viewOnlineHelpToolStripMenuItem_Click_1(object sender, EventArgs e)
-		{
-			Process.Start("https://findandreplace.codeplex.com/documentation");
-		}
-
 		private Finder GetFinder()
 		{
 			var finder = new Finder();
