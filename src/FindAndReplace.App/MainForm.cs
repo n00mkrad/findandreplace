@@ -83,30 +83,42 @@ namespace FindAndReplace.App
 
 		private void SaveToRegistry()
 		{
-            var data = new FormData
-            {
-                IsFindOnly = _isFindOnly,
-                Dir = txtDir.Text,
-                IncludeSubDirectories = chkIncludeSubDirectories.Checked,
-                FileMask = txtFileMask.Text,
-                ExcludeFileMask = txtExcludeFileMask.Text,
-                FindText = CleanRichBoxText(txtFind.Text),
-                IsCaseSensitive = chkIsCaseSensitive.Checked,
-                IsRegEx = chkIsRegEx.Checked,
-                SkipBinaryFileDetection = chkSkipBinaryFileDetection.Checked,
-                IncludeFilesWithoutMatches = chkIncludeFilesWithoutMatches.Checked,
-                ShowEncoding = chkShowEncoding.Visible && chkShowEncoding.Checked,
-                ReplaceText = CleanRichBoxText(txtReplace.Text),
-                UseEscapeChars = chkUseEscapeChars.Checked,
-                Encoding = cmbEncoding.Text,
-                ExcludeDir = txtExcludeDir.Text,
-                IsKeepModifiedDate = chkKeepModifiedDate.Checked
-            };
-
-            data.SaveSetting();
+			var data = new FormData
+			{
+				IsFindOnly = _isFindOnly,
+				Dir = txtDir.Text,
+				IncludeSubDirectories = chkIncludeSubDirectories.Checked,
+				FileMask = txtFileMask.Text,
+				ExcludeFileMask = txtExcludeFileMask.Text,
+				FindText = CleanRichBoxText(txtFind.Text),
+				IsCaseSensitive = chkIsCaseSensitive.Checked,
+				IsRegEx = chkIsRegEx.Checked,
+				SkipBinaryFileDetection = chkSkipBinaryFileDetection.Checked,
+				IncludeFilesWithoutMatches = chkIncludeFilesWithoutMatches.Checked,
+				ShowEncoding = chkShowEncoding.Visible && chkShowEncoding.Checked,
+				ReplaceText = CleanRichBoxText(txtReplace.Text),
+				UseEscapeChars = chkUseEscapeChars.Checked,
+				FileEncoding = cmbEncoding.Text,
+				ExcludeDir = txtExcludeDir.Text,
+				IsKeepModifiedDate = chkKeepModifiedDate.Checked
+			};
 
 			_lastOperationFormData = data;
+
+			try
+			{
+				data.SaveSetting();
+			}
+			catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+			{
+				MessageBox.Show(this,
+					"Could not save settings. Another instance may still be writing the configuration file." + Environment.NewLine + ex.Message,
+					"Save Settings",
+					MessageBoxButtons.OK,
+					MessageBoxIcon.Warning);
+			}
 		}
+
 
 
 		private void PrepareFinderGrid()
@@ -718,14 +730,9 @@ namespace FindAndReplace.App
 
 		private void MainForm_Load(object sender, EventArgs e)
 		{
-			var encodings = GetEncodings();
-
-			cmbEncoding.Items.AddRange(encodings.ToArray());
-
+			cmbEncoding.Items.AddRange(GetEncodings());
 			cmbEncoding.SelectedIndex = 0;
-			
 			InitWithRegistryData();
-
 		    txtDir.Focus();
 		}
 
@@ -815,9 +822,9 @@ namespace FindAndReplace.App
 			if (_currentThread.IsAlive)
 			{
 				if (_isFindOnly)
-					_finder.CancelFind();
+					_finder.Cancel();
 				else
-					_replacer.CancelReplace();
+					_replacer.Cancel();
 			}
 		}
 
@@ -848,8 +855,8 @@ namespace FindAndReplace.App
 			chkUseEscapeChars.Checked = data.UseEscapeChars;
 		    chkKeepModifiedDate.Checked = data.IsKeepModifiedDate;
 
-            if (!string.IsNullOrEmpty(data.Encoding))
-				cmbEncoding.SelectedIndex = cmbEncoding.Items.IndexOf(data.Encoding);
+            if (!string.IsNullOrEmpty(data.FileEncoding))
+				cmbEncoding.SelectedIndex = cmbEncoding.Items.IndexOf(data.FileEncoding);
 		}
 
 		private void btnSelectDir_Click(object sender, EventArgs e)
@@ -889,20 +896,11 @@ namespace FindAndReplace.App
 			txtReplace.Text = findText;
 		}
 
-		private List<string> GetEncodings()
+		private string[] GetEncodings()
 		{
-			var result = new List<string>();
-
-			result.Add("Auto Detect");
-
-			foreach (EncodingInfo ei in Encoding.GetEncodings().OrderBy(ei=>ei.Name))
-			{
-				//Encoding e = ei.GetEncoding();
-
-				result.Add(ei.Name);
-			}
-
-			return result;
+			var encs = new List<string> { "Auto Detect" };
+			encs.AddRange(Encoding.GetEncodings().OrderBy(ei => ei.Name).Select(ei => ei.Name));
+			return encs.ToArray();
 		}
 
 		private Finder GetFinder()

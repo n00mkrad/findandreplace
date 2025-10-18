@@ -120,7 +120,7 @@ namespace FindAndReplace.App
             this.txtDir.Margin = new System.Windows.Forms.Padding(0);
             this.txtDir.MinimumSize = new System.Drawing.Size(539, 20);
             this.txtDir.Name = "txtDir";
-            this.txtDir.Size = new System.Drawing.Size(873, 20);
+            this.txtDir.Size = new System.Drawing.Size(871, 20);
             this.txtDir.TabIndex = 0;
             this.txtDir.Validating += new System.ComponentModel.CancelEventHandler(this.txtDir_Validating);
             // 
@@ -207,14 +207,14 @@ namespace FindAndReplace.App
             this.btnSelectDir.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(16)))), ((int)(((byte)(16)))), ((int)(((byte)(16)))));
             this.btnSelectDir.CausesValidation = false;
             this.btnSelectDir.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSelectDir.Location = new System.Drawing.Point(950, 2);
+            this.btnSelectDir.Location = new System.Drawing.Point(948, 2);
             this.btnSelectDir.Margin = new System.Windows.Forms.Padding(0, 0, 5, 0);
             this.btnSelectDir.MaximumSize = new System.Drawing.Size(25, 20);
-            this.btnSelectDir.MinimumSize = new System.Drawing.Size(25, 20);
+            this.btnSelectDir.MinimumSize = new System.Drawing.Size(27, 20);
             this.btnSelectDir.Name = "btnSelectDir";
-            this.btnSelectDir.Size = new System.Drawing.Size(25, 20);
+            this.btnSelectDir.Size = new System.Drawing.Size(27, 20);
             this.btnSelectDir.TabIndex = 1;
-            this.btnSelectDir.Text = "...";
+            this.btnSelectDir.Text = "···";
             this.btnSelectDir.UseVisualStyleBackColor = false;
             this.btnSelectDir.Click += new System.EventHandler(this.btnSelectDir_Click);
             // 
