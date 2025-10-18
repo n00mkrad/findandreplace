@@ -76,6 +76,8 @@ namespace FindAndReplace.App
             this.label5 = new System.Windows.Forms.Label();
             this.panel6 = new System.Windows.Forms.Panel();
             this.panel3 = new System.Windows.Forms.Panel();
+            this.panel10 = new System.Windows.Forms.Panel();
+            this.panel7 = new System.Windows.Forms.Panel();
             this.pnlGridResults = new System.Windows.Forms.Panel();
             this.label9 = new System.Windows.Forms.Label();
             this.lblResults = new System.Windows.Forms.Label();
@@ -84,8 +86,6 @@ namespace FindAndReplace.App
             this.btnCancel = new System.Windows.Forms.Button();
             this.lblStatus = new System.Windows.Forms.Label();
             this.progressBar = new System.Windows.Forms.ProgressBar();
-            this.panel7 = new System.Windows.Forms.Panel();
-            this.panel10 = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).BeginInit();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -96,10 +96,10 @@ namespace FindAndReplace.App
             this.panel4.SuspendLayout();
             this.panel6.SuspendLayout();
             this.panel3.SuspendLayout();
+            this.panel10.SuspendLayout();
+            this.panel7.SuspendLayout();
             this.pnlGridResults.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gvResults)).BeginInit();
-            this.panel7.SuspendLayout();
-            this.panel10.SuspendLayout();
             this.SuspendLayout();
             // 
             // errorProvider1
@@ -177,7 +177,6 @@ namespace FindAndReplace.App
             this.chkShowEncoding.Text = "Show File Encoding";
             this.toolTip_chkShowEncoding.SetToolTip(this.chkShowEncoding, "Indicate encoding detected for each file");
             this.chkShowEncoding.UseVisualStyleBackColor = true;
-            this.chkShowEncoding.Visible = false;
             // 
             // panel1
             // 
@@ -578,6 +577,26 @@ namespace FindAndReplace.App
             this.panel3.Size = new System.Drawing.Size(982, 654);
             this.panel3.TabIndex = 42;
             // 
+            // panel10
+            // 
+            this.panel10.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panel10.Controls.Add(this.chkIncludeSubDirectories);
+            this.panel10.Location = new System.Drawing.Point(0, 0);
+            this.panel10.Name = "panel10";
+            this.panel10.Size = new System.Drawing.Size(500, 26);
+            this.panel10.TabIndex = 53;
+            // 
+            // panel7
+            // 
+            this.panel7.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.panel7.Controls.Add(this.txtExcludeDir);
+            this.panel7.Controls.Add(this.label6);
+            this.panel7.Location = new System.Drawing.Point(499, 3);
+            this.panel7.Name = "panel7";
+            this.panel7.Size = new System.Drawing.Size(480, 26);
+            this.panel7.TabIndex = 52;
+            // 
             // pnlGridResults
             // 
             this.pnlGridResults.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -690,26 +709,6 @@ namespace FindAndReplace.App
             this.progressBar.Size = new System.Drawing.Size(817, 24);
             this.progressBar.TabIndex = 20;
             // 
-            // panel7
-            // 
-            this.panel7.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.panel7.Controls.Add(this.txtExcludeDir);
-            this.panel7.Controls.Add(this.label6);
-            this.panel7.Location = new System.Drawing.Point(499, 3);
-            this.panel7.Name = "panel7";
-            this.panel7.Size = new System.Drawing.Size(480, 26);
-            this.panel7.TabIndex = 52;
-            // 
-            // panel10
-            // 
-            this.panel10.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panel10.Controls.Add(this.chkIncludeSubDirectories);
-            this.panel10.Location = new System.Drawing.Point(0, 0);
-            this.panel10.Name = "panel10";
-            this.panel10.Size = new System.Drawing.Size(500, 26);
-            this.panel10.TabIndex = 53;
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -742,13 +741,13 @@ namespace FindAndReplace.App
             this.panel6.ResumeLayout(false);
             this.panel6.PerformLayout();
             this.panel3.ResumeLayout(false);
+            this.panel10.ResumeLayout(false);
+            this.panel10.PerformLayout();
+            this.panel7.ResumeLayout(false);
+            this.panel7.PerformLayout();
             this.pnlGridResults.ResumeLayout(false);
             this.pnlGridResults.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gvResults)).EndInit();
-            this.panel7.ResumeLayout(false);
-            this.panel7.PerformLayout();
-            this.panel10.ResumeLayout(false);
-            this.panel10.PerformLayout();
             this.ResumeLayout(false);
 
 		}

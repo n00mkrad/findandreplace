@@ -263,9 +263,8 @@ namespace FindAndReplace
 
 		protected virtual void OnFileProcessed(FinderEventArgs e)
 		{
-			if (FileProcessed != null)
-				FileProcessed(this, e);
-		}
+            FileProcessed?.Invoke(this, e);
+        }
 
 		public string GenCommandLine(bool showEncoding)
 		{
