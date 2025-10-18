@@ -15,14 +15,14 @@ namespace FindAndReplace.App
 		public AboutBox()
 		{
 			InitializeComponent();
-			this.Text = String.Format("About {0}", AssemblyTitle);
-			this.lblProductName.Text = AssemblyProduct;
-			this.lnkProduct.Text = "http://findandreplace.io/";
+			Text = String.Format("About {0}", AssemblyTitle);
+			lblProductName.Text = AssemblyProduct;
+			lnkProduct.Text = "http://findandreplace.io/";
 		
-			this.lblVersion.Text = String.Format("Version {0}", AssemblyVersion);
-			this.lblCopyright.Text = AssemblyCopyright;
-			this.lnkCompany.Text = AssemblyCompany;
-		    this.uiSupportedBy.Text = "ZZZ Projects";
+			lblVersion.Text = String.Format("Version {0}", AssemblyVersion);
+			lblCopyright.Text = AssemblyCopyright;
+			lnkCompany.Text = AssemblyCompany;
+		    uiSupportedBy.Text = "ZZZ Projects";
         }
 
 		#region Assembly Attribute Accessors

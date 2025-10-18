@@ -90,7 +90,7 @@ namespace FindAndReplace.App
 
 			help.Copyright = new CopyrightInfo("ENTech Solutions", DateTime.Now.Year);
 
-			if (this.LastParserState != null && this.LastParserState.Errors.Count > 0)
+			if (LastParserState != null && LastParserState.Errors.Count > 0)
 			{
 				HandleParsingErrorsInHelp(help);
 			}

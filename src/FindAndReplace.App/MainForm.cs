@@ -32,8 +32,12 @@ namespace FindAndReplace.App
 		public MainForm()
 		{
 			InitializeComponent();
-		    this.Text = this.Text + " (v" + Application.ProductVersion + ")";
-		}
+		    Text = $"{Text} (v{Application.ProductVersion})";
+            gvResults.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            gvResults.MultiSelect = true;
+            gvResults.MouseDown += Results_MouseDown;
+            gvResults.MouseMove += Results_MouseMove;
+        }
 
 
 		protected override void OnLoad(EventArgs e)
@@ -41,8 +45,8 @@ namespace FindAndReplace.App
 			base.OnLoad(e);
 
 			//Fix from: http://stackoverflow.com/questions/3421453/c-why-is-text-in-textbox-highlighted-selected-when-form-is-displayed
-			this.txtDir.SelectionStart = this.txtDir.Text.Length;
-			this.txtDir.DeselectAll();
+			txtDir.SelectionStart = txtDir.Text.Length;
+			txtDir.DeselectAll();
 		}
 
 		private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
@@ -79,25 +83,25 @@ namespace FindAndReplace.App
 
 		private void SaveToRegistry()
 		{
-			var data = new FormData();
-
-			data.IsFindOnly = _isFindOnly;
-
-			data.Dir = txtDir.Text;
-			data.IncludeSubDirectories = chkIncludeSubDirectories.Checked;
-			data.FileMask = txtFileMask.Text;
-			data.ExcludeFileMask = txtExcludeFileMask.Text;
-			data.FindText = CleanRichBoxText(txtFind.Text);
-			data.IsCaseSensitive = chkIsCaseSensitive.Checked;
-			data.IsRegEx = chkIsRegEx.Checked;
-			data.SkipBinaryFileDetection = chkSkipBinaryFileDetection.Checked;
-			data.IncludeFilesWithoutMatches = chkIncludeFilesWithoutMatches.Checked;
-			data.ShowEncoding = chkShowEncoding.Checked;
-			data.ReplaceText = CleanRichBoxText(txtReplace.Text);
-			data.UseEscapeChars = chkUseEscapeChars.Checked;
-			data.Encoding = cmbEncoding.Text;
-		    data.ExcludeDir = txtExcludeDir.Text;
-		    data.IsKeepModifiedDate = chkKeepModifiedDate.Checked;
+            var data = new FormData
+            {
+                IsFindOnly = _isFindOnly,
+                Dir = txtDir.Text,
+                IncludeSubDirectories = chkIncludeSubDirectories.Checked,
+                FileMask = txtFileMask.Text,
+                ExcludeFileMask = txtExcludeFileMask.Text,
+                FindText = CleanRichBoxText(txtFind.Text),
+                IsCaseSensitive = chkIsCaseSensitive.Checked,
+                IsRegEx = chkIsRegEx.Checked,
+                SkipBinaryFileDetection = chkSkipBinaryFileDetection.Checked,
+                IncludeFilesWithoutMatches = chkIncludeFilesWithoutMatches.Checked,
+                ShowEncoding = chkShowEncoding.Visible && chkShowEncoding.Checked,
+                ReplaceText = CleanRichBoxText(txtReplace.Text),
+                UseEscapeChars = chkUseEscapeChars.Checked,
+                Encoding = cmbEncoding.Text,
+                ExcludeDir = txtExcludeDir.Text,
+                IsKeepModifiedDate = chkKeepModifiedDate.Checked
+            };
 
             data.SaveSetting();
 
@@ -115,7 +119,7 @@ namespace FindAndReplace.App
 			AddResultsColumn("Filename", "Filename", 250);
 			AddResultsColumn("Path", "Path", 450);
 
-			if (chkShowEncoding.Checked)
+			if (chkShowEncoding.Visible && chkShowEncoding.Checked)
 				AddResultsColumn("FileEncoding", "Encoding", 100);
 
 			AddResultsColumn("NumMatches", "Matches", 55);
@@ -150,14 +154,14 @@ namespace FindAndReplace.App
 
 		private void OnFinderFileProcessed(object sender, FinderEventArgs e)
 		{
-			if (!this.gvResults.InvokeRequired)
+			if (!gvResults.InvokeRequired)
 			{
 				ShowFindResult(e.ResultItem, e.Stats, e.Status);
 			}
 			else
 			{
 				SetFindResultCallback findResultCallback = ShowFindResult;
-				this.Invoke(findResultCallback, new object[] {e.ResultItem, e.Stats, e.Status});
+				Invoke(findResultCallback, new object[] {e.ResultItem, e.Stats, e.Status});
 			}
 		}
 
@@ -221,9 +225,6 @@ namespace FindAndReplace.App
 			else
 			{
 				HideResultPanel();
-
-				txtNoMatches.Visible = true;
-
 				HideStats();
 			}
 
@@ -281,10 +282,6 @@ namespace FindAndReplace.App
 		private void ShowResultPanel()
 		{
 			DisableButtons();
-
-			txtNoMatches.Visible = false;
-
-			HideCommandLinePanel();
 			HideMatchesPreviewPanel();
 
 			if (!pnlGridResults.Visible)
@@ -307,32 +304,6 @@ namespace FindAndReplace.App
 			if (pnlGridResults.Visible)
 			{
 				pnlGridResults.Visible = false;
-
-				//this.Height -= pnlGridResults.Height + 10;
-				//this.Width -= ExtraWidthWhenResults;
-			}
-		}
-
-		private void ShowCommandLinePanel()
-		{
-			HideResultPanel();
-			HideMatchesPreviewPanel();
-
-			if (!pnlCommandLine.Visible)
-			{
-				pnlCommandLine.Visible = true;
-				//this.Height += pnlCommandLine.Height + 10;
-				//this.Width += ExtraWidthWhenResults;
-			}
-		}
-
-		private void HideCommandLinePanel()
-		{
-			if (pnlCommandLine.Visible)
-			{
-				pnlCommandLine.Visible = false;
-				//this.Height -= pnlCommandLine.Height + 10;
-				//this.Width -= ExtraWidthWhenResults;
 			}
 		}
 
@@ -341,9 +312,7 @@ namespace FindAndReplace.App
 			if (!txtMatchesPreview.Enabled)
 			{
 				txtMatchesPreview.Enabled = true;
-				//this.Height += txtMatchesPreview.Height + 50;
 			}
-
 		}
 
 		private void HideMatchesPreviewPanel()
@@ -351,7 +320,6 @@ namespace FindAndReplace.App
 			if (txtMatchesPreview.Enabled)
 			{
 				txtMatchesPreview.Enabled = false;
-				//this.Height -= (txtMatchesPreview.Height + 50);
 			}
 		}
 
@@ -367,16 +335,10 @@ namespace FindAndReplace.App
 			ValidateControls(Controls);
 
 			//Focus on first invalid control
-			if (_firstInvalidControl != null)
-			{
-				if (_firstInvalidControl == pnlFind)  //Handle pnlFind
-					_firstInvalidControl = txtFind;
+			_firstInvalidControl?.Focus();
 
-				_firstInvalidControl.Focus();
-			}
-
-			if (!_isFormValid && this.AutoValidate == AutoValidate.Disable)
-				this.AutoValidate = AutoValidate.EnablePreventFocusChange; //Revalidate on focus change
+			if (!_isFormValid && AutoValidate == AutoValidate.Disable)
+				AutoValidate = AutoValidate.EnablePreventFocusChange; //Revalidate on focus change
 
 			return _isFormValid;
 		}
@@ -418,12 +380,9 @@ namespace FindAndReplace.App
 			if (!ValidateForm())
 				return;
 
-			if (String.IsNullOrEmpty(txtReplace.Text))
+			if (txtReplace.Text == "")
 			{
-				DialogResult dlgResult = MessageBox.Show(this,
-				                                         "Are you sure you would like to replace with an empty string?",
-				                                         "Replace Confirmation",
-				                                         MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+				DialogResult dlgResult = MessageBox.Show(this, "Are you sure you want to replace with an empty string?", "Replace Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 				if (dlgResult == DialogResult.No)
 					return;
 			}
@@ -442,10 +401,8 @@ namespace FindAndReplace.App
 
 			SaveToRegistry();
 
-			_currentThread = new Thread(DoReplaceWork);
-			_currentThread.IsBackground = true;
-
-			_currentThread.Start();
+            _currentThread = new Thread(DoReplaceWork) { IsBackground = true };
+            _currentThread.Start();
 		}
 
 		private void CreateListener(Replacer replacer)
@@ -464,7 +421,7 @@ namespace FindAndReplace.App
 			AddResultsColumn("Filename", "Filename", 250);
 			AddResultsColumn("Path", "Path", 400);
 
-			if (chkShowEncoding.Checked)
+			if (chkShowEncoding.Visible && chkShowEncoding.Checked)
 				AddResultsColumn("FileEncoding", "Encoding", 100);
 
 			AddResultsColumn("NumMatches", "Matches", 50);
@@ -556,9 +513,6 @@ namespace FindAndReplace.App
 			else
 			{
 				HideResultPanel();
-
-				txtNoMatches.Visible = true;
-
 				HideStats();
 			}
 
@@ -578,14 +532,14 @@ namespace FindAndReplace.App
 
 		private void ReplaceFileProceed(object sender, ReplacerEventArgs e)
 		{
-			if (!this.gvResults.InvokeRequired)
+			if (!gvResults.InvokeRequired)
 			{
 				ShowReplaceResult(e.ResultItem, e.Stats, e.Status);
 			}
 			else
 			{
 				var replaceResultCallback = new SetReplaceResultCallback(ShowReplaceResult);
-				this.Invoke(replaceResultCallback, new object[] {e.ResultItem, e.Stats, e.Status});
+				Invoke(replaceResultCallback, new object[] {e.ResultItem, e.Stats, e.Status});
 			}
 		}
 
@@ -594,22 +548,11 @@ namespace FindAndReplace.App
 			if (!ValidateForm())
 				return;
 
-			ShowCommandLinePanel();
 			lblStats.Text = "";
 
-			txtCommandLine.Clear();
-
 			var replacer = GetReplacer();
-
-			string s =
-				String.Format(
-					"\"{0}\" {1}",
-					Application.ExecutablePath,
-					replacer.GenCommandLine(chkShowEncoding.Checked)
-				);
-
-			txtCommandLine.Text = s;
-		}
+            Clipboard.SetText($"\"{Application.ExecutablePath}\" {replacer.GenCommandLine(chkShowEncoding.Visible && chkShowEncoding.Checked)}");
+        }
 
 		private void txtDir_Validating(object sender, System.ComponentModel.CancelEventArgs e)
 		{
@@ -643,7 +586,7 @@ namespace FindAndReplace.App
 
 			if (!validationResult.IsSuccess)
 			{
-				errorProvider1.SetError(pnlFind, validationResult.ErrorMessage);
+				errorProvider1.SetError(txtFind, validationResult.ErrorMessage);
 				return;
 			}
 
@@ -654,7 +597,7 @@ namespace FindAndReplace.App
 
 				if (!validationResult.IsSuccess)
 				{
-					errorProvider1.SetError(pnlFind, validationResult.ErrorMessage);
+					errorProvider1.SetError(txtFind, validationResult.ErrorMessage);
 					return;
 				}
 			}
@@ -665,12 +608,12 @@ namespace FindAndReplace.App
 
 				if (!validationResult.IsSuccess)
 				{
-					errorProvider1.SetError(pnlFind, validationResult.ErrorMessage);
+					errorProvider1.SetError(txtFind, validationResult.ErrorMessage);
 					return;
 				}
 			}
 
-			errorProvider1.SetError(pnlFind, "");
+			errorProvider1.SetError(txtFind, "");
 		}
 
 		private void pnlReplace_Validating(object sender, System.ComponentModel.CancelEventArgs e)
@@ -681,12 +624,12 @@ namespace FindAndReplace.App
 
 				if (!validationResult.IsSuccess)
 				{
-					errorProvider1.SetError(pnlReplace, validationResult.ErrorMessage);
+					errorProvider1.SetError(txtReplace, validationResult.ErrorMessage);
 					return;
 				}
 			}
 
-			errorProvider1.SetError(pnlReplace, "");
+			errorProvider1.SetError(txtReplace, "");
 		}
 
 		private void gvResults_CellClick(object sender, DataGridViewCellEventArgs e)
@@ -711,7 +654,7 @@ namespace FindAndReplace.App
 
 			txtMatchesPreview.Text = matchesPreviewText;
 
-			var font = new Font("Microsoft Sans Serif", 8, FontStyle.Bold);
+			var font = new Font(txtMatchesPreview.Font.Name, txtMatchesPreview.Font.Size, FontStyle.Bold);
 
 			//Use _lastOperation form data since user may change it before clicking on preview
 			var findText = _lastOperationFormData.IsFindOnly
@@ -734,7 +677,7 @@ namespace FindAndReplace.App
 
 				txtMatchesPreview.SelectionFont = font;
 
-				txtMatchesPreview.SelectionColor = Color.CadetBlue;
+				txtMatchesPreview.SelectionColor = Color.LightGreen;
 
 				//Limit highlighted matches, otherwise may lock up the app .  Happened with 65K+
 				count++;
@@ -755,10 +698,10 @@ namespace FindAndReplace.App
 
 			rowNumbers = rowNumbers.Distinct().OrderBy(r => r).ToList();
 			var prevLineIndex = 0;
-			string lineSeparator =
-				("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+			string lineSeparator = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
 
-			foreach (var rowNumber in rowNumbers)
+
+            foreach (var rowNumber in rowNumbers)
 			{
 				if (rowNumber - prevLineIndex > 1 && prevLineIndex != 0)
 				{
@@ -838,41 +781,21 @@ namespace FindAndReplace.App
 
 		private void ShowStats(Stats stats, bool showReplaceStats = false)
 		{
-			var sb = new StringBuilder();
-			sb.AppendLine("Files:");
-			sb.AppendLine("- Total: " + stats.Files.Total);
-			sb.AppendLine("- Processed: " + stats.Files.Processed);
-			sb.AppendLine("- Binary: " + stats.Files.Binary + " (skipped)");
-			sb.AppendLine("- With Matches: " + stats.Files.WithMatches);
-			sb.AppendLine("- Without Matches: " + stats.Files.WithoutMatches);
-			sb.AppendLine("- Failed to Open: " + stats.Files.FailedToRead);
+			var lines = new List<string> {
+				$"- Processed {stats.Files.Processed}/{stats.Files.Total}{(stats.Files.Binary > 0 ? $" (Skipped {stats.Files.Binary} binary files)" : "")}{(stats.Files.FailedToRead > 0 ? $" (Failed to read {stats.Files.FailedToRead} files)" : "")}",
+				$"- With matches: {stats.Files.WithMatches}, without matches: {stats.Files.WithoutMatches}",
+			};
 
-			if (showReplaceStats)
-				sb.AppendLine("- Failed to Write: " + stats.Files.FailedToWrite);
+            if (showReplaceStats)
+                lines.Add($"- Replaced {stats.Matches.Replaced}{(stats.Files.FailedToWrite > 0 ? $", failed to write {stats.Files.FailedToWrite}" : "")}");
 
-			sb.AppendLine("");
-			sb.AppendLine("Matches:");
-			sb.AppendLine("- Found: " + stats.Matches.Found);
+			var passedSec = stats.Time.Passed.TotalSeconds;
+			var remainSec = stats.Time.Remaining.TotalSeconds;
 
-			if (showReplaceStats)
-				sb.AppendLine("- Replaced: " + stats.Matches.Replaced);
+            if (passedSec > 0.1d)
+                lines.Add($"- Time: {Utils.FormatTimeSpan(passedSec)}{(passedSec > 2d && remainSec > 1d ? $", ETA: {Utils.FormatTimeSpan(remainSec)}" : "")}");
 
-			var passedSeconds = stats.Time.Passed.TotalSeconds;
-			var remainingSeconds = stats.Time.Remaining.TotalSeconds;
-
-			if (passedSeconds >= 1)
-			{
-				sb.AppendLine("");
-				sb.AppendLine("Time:");
-				sb.AppendLine("- Passed: " + Utils.FormatTimeSpan(stats.Time.Passed));
-
-				if (passedSeconds >= 3 && (int) remainingSeconds != 0)
-				{
-					sb.AppendLine("- Remaining: " + Utils.FormatTimeSpan(stats.Time.Remaining) + " (estimated)");
-				}
-			}
-
-			lblStats.Text = sb.ToString();
+			lblStats.Text = string.Join("\n", lines);
 		}
 
 
@@ -958,16 +881,6 @@ namespace FindAndReplace.App
 			}
 		}
 
-		private void txtCommandLine_KeyDown(object sender, KeyEventArgs e)
-		{
-			if (e.Control && (e.KeyCode == System.Windows.Forms.Keys.A))
-			{
-				txtCommandLine.SelectAll();
-				e.SuppressKeyPress = true;
-				e.Handled = true;
-			}
-		}
-
 		private void btnSwap_Click(object sender, EventArgs e)
 		{
 			string findText = txtFind.Text;
@@ -1002,8 +915,6 @@ namespace FindAndReplace.App
 		{
 			Process.Start("https://findandreplace.codeplex.com/documentation");
 		}
-
-		
 
 		private Finder GetFinder()
 		{
@@ -1067,20 +978,65 @@ namespace FindAndReplace.App
             txtExcludeDir.Enabled = chkIncludeSubDirectories.Checked;
         }
 
-        private void pictureBox1_Click(object sender, EventArgs e)
+        #region Drag n Drop
+
+        private Rectangle _dragBox = Rectangle.Empty;
+        private int _mouseDownRowIndex = -1;
+
+        private void Results_MouseDown(object sender, MouseEventArgs e)
         {
-            Process.Start("http://www.zzzprojects.com/");
+            var ht = gvResults.HitTest(e.X, e.Y);
+            _mouseDownRowIndex = ht.RowIndex;
+
+            if (_mouseDownRowIndex >= 0 && e.Button == MouseButtons.Left)
+            {
+                // create the drag box for threshold
+                Size dragSize = SystemInformation.DragSize;
+                _dragBox = new Rectangle(
+                    new Point(e.X - (dragSize.Width / 2), e.Y - (dragSize.Height / 2)),
+                    dragSize);
+            }
+            else
+            {
+                _dragBox = Rectangle.Empty;
+            }
         }
 
-        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void Results_MouseMove(object sender, MouseEventArgs e)
         {
-            Process.Start("http://www.zzzprojects.com/");
+            if (e.Button != MouseButtons.Left || _dragBox == Rectangle.Empty || _dragBox.Contains(e.Location))
+                return;
+
+            // If user hasn’t selected the row yet, select it now.
+            if (_mouseDownRowIndex >= 0 && !gvResults.Rows[_mouseDownRowIndex].Selected)
+            {
+                gvResults.ClearSelection();
+                gvResults.Rows[_mouseDownRowIndex].Selected = true;
+            }
+
+            // Collect file paths from selected rows (assumes column 0 holds full paths)
+            var paths = gvResults.SelectedRows.Cast<DataGridViewRow>().Select(r => Convert.ToString(r.Cells[1].Value)).Where(p => !string.IsNullOrWhiteSpace(p)).ToArray();
+
+            if (paths.Length == 0)
+				return;
+
+			// Reconstruct full path
+			for(int i = 0; i < paths.Length; i++)
+			{
+				paths[i] = txtDir.Text.Replace('/', '\\').TrimEnd('\\') + '\\' + paths[i].TrimStart('.');
+            }
+
+            paths = paths.Where(File.Exists).ToArray();
+            if (paths.Length == 0)
+				return;
+
+            var data = new DataObject();
+            data.SetData(DataFormats.FileDrop, paths); // primary: files for Explorer, browsers, etc.
+            data.SetData(DataFormats.UnicodeText, string.Join(Environment.NewLine, paths)); // nice-to-have for text targets
+            DoDragDrop(data, DragDropEffects.Copy);
         }
 
-        private void pictureBox2_Click(object sender, EventArgs e)
-        {
-            Process.Start("http://www.zzzprojects.com/contribute");
-        }
+        #endregion
     }
 }
  
