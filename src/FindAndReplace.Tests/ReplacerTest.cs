@@ -230,7 +230,7 @@ namespace FindAndReplace.Tests
 
 			Assert.AreEqual(1, resultItems.Count);
 			Assert.AreEqual("test3.txt", resultItems[0].FileName);
-			Assert.IsTrue(resultItems[0].FailedToWrite);
+			Assert.IsTrue(resultItems[0].FailedToReadWrite);
 			Assert.IsNotEmpty(resultItems[0].ErrorMessage);
 		}
 

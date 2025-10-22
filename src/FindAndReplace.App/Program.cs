@@ -266,7 +266,7 @@ namespace FindAndReplace.App
 			return (int) dosErrorLevel;
 		}
 
-		private void OnFinderFileProcessed(object sender, FinderEventArgs e)
+		private void OnFinderFileProcessed(object sender, ProcessorEventArgs<Finder.FindResultItem> e)
 		{
 			if (e.ResultItem.IncludeInResultsList && !e.IsSilent)
 				PrintFinderResultRow(e.ResultItem, e.Stats);
@@ -276,7 +276,7 @@ namespace FindAndReplace.App
 
 		}
 
-		private void OnReplacerFileProcessed(object sender, ReplacerEventArgs e)
+		private void OnReplacerFileProcessed(object sender, ProcessorEventArgs<Replacer.ReplaceResultItem> e)
 		{
 			if (e.ResultItem.IncludeInResultsList && !e.IsSilent)
 				PrintReplacerResultRow(e.ResultItem, e.Stats);
@@ -310,7 +310,7 @@ namespace FindAndReplace.App
 		{
 			PrintFileAndEncoding(item);
 
-			if (!item.FailedToOpen)
+			if (!item.FailedToReadWrite)
 				PrintNameValuePair("Matches", item.NumMatches.ToString());
 
 			PrintNameValuePair("Replaced", item.IsReplaced ? "Yes" : "No");

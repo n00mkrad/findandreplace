@@ -164,7 +164,7 @@ namespace FindAndReplace.App
 			_finder.FileProcessed += OnFinderFileProcessed;
 		}
 
-		private void OnFinderFileProcessed(object sender, FinderEventArgs e)
+		private void OnFinderFileProcessed(object sender, ProcessorEventArgs<Finder.FindResultItem> e)
 		{
 			if (!gvResults.InvokeRequired)
 			{
@@ -287,7 +287,7 @@ namespace FindAndReplace.App
 		    catch (Exception e)
 		    {
 		        MessageBox.Show(e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-		        OnFinderFileProcessed(this, new FinderEventArgs(new Finder.FindResultItem(), new Stats(), Status.Cancelled, _finder.IsSilent));
+		        OnFinderFileProcessed(this, new ProcessorEventArgs<Finder.FindResultItem>(new Finder.FindResultItem(), new Stats(), Status.Cancelled, _finder.IsSilent));
 		    }
 		}
 
@@ -457,7 +457,7 @@ namespace FindAndReplace.App
 		    catch (Exception e)
 		    {
 		        MessageBox.Show(e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-		        ReplaceFileProceed(this, new ReplacerEventArgs(new Replacer.ReplaceResultItem(), new Stats(), Status.Cancelled, _replacer.IsSilent));
+		        ReplaceFileProceed(this, new ProcessorEventArgs<Replacer.ReplaceResultItem>(new Replacer.ReplaceResultItem(), new Stats(), Status.Cancelled, _replacer.IsSilent));
 		    }
         }
 
@@ -542,7 +542,7 @@ namespace FindAndReplace.App
 			}
 		}
 
-		private void ReplaceFileProceed(object sender, ReplacerEventArgs e)
+		private void ReplaceFileProceed(object sender, ProcessorEventArgs<Replacer.ReplaceResultItem> e)
 		{
 			if (!gvResults.InvokeRequired)
 			{
@@ -745,43 +745,48 @@ namespace FindAndReplace.App
 			OpenFileUsingExternalApp(e.RowIndex);
 		}
 
-		private void OpenFileUsingExternalApp(int rowIndex)
-		{
-			var filePath = gvResults.Rows[rowIndex].Cells[1].Value.ToString();
-
-			string file = txtDir.Text + filePath.TrimStart('.');
-			Process.Start(file);
-		}
-
 		private ContextMenuStrip CreateContextMenu(int rowNumber)
 		{
 			var contextMenu = new ContextMenuStrip();
 			contextMenu.ShowImageMargin = false;
+            var eventArgs = new GVResultEventArgs { cellRow = rowNumber };
 
-			var openMenuItem = new ToolStripMenuItem("Open");
-
-			var eventArgs = new GVResultEventArgs();
-			eventArgs.cellRow = rowNumber;
-			openMenuItem.Click += delegate { contextMenu_ClickOpen(this, eventArgs); };
-
-			var openFolderMenuItem = new ToolStripMenuItem("Open Containing Folder");
-			openFolderMenuItem.Click += delegate { contextMenu_ClickOpenFolder(this, eventArgs); };
-
+            var openMenuItem = new ToolStripMenuItem("Open");
+            openMenuItem.Click += (s, e) => OpenFileUsingExternalApp(rowNumber);
 			contextMenu.Items.Add(openMenuItem);
-			contextMenu.Items.Add(openFolderMenuItem);
 
-			return contextMenu;
+            var openFolderMenuItem = new ToolStripMenuItem("Open Containing Folder");
+			openFolderMenuItem.Click += (s, e) => OpenFileFolder(rowNumber);
+            contextMenu.Items.Add(openFolderMenuItem);
+
+            var copyNameItem = new ToolStripMenuItem("Copy File Name");
+            copyNameItem.Click += (s, e) => Clipboard.SetText($"{gvResults.Rows[rowNumber].Cells[0]}");
+			contextMenu.Items.Add(copyNameItem);
+
+			var copyNameNoExtItem = new ToolStripMenuItem("Copy File Name Without Extension");
+			copyNameNoExtItem.Click += (s, e) => Clipboard.SetText(Path.GetFileNameWithoutExtension($"{gvResults.Rows[rowNumber].Cells[0].Value.ToString()}"));
+			contextMenu.Items.Add(copyNameNoExtItem);
+
+			var copyPathItem = new ToolStripMenuItem("Copy Full Path");
+			copyPathItem.Click += (s, e) => Clipboard.SetText(GetFullPath(rowNumber));
+			contextMenu.Items.Add(copyPathItem);
+
+            return contextMenu;
 		}
 
-		private void contextMenu_ClickOpen(object sender, GVResultEventArgs e)
-		{
-			OpenFileUsingExternalApp(e.cellRow);
-		}
+		public string GetFullPath(int rowIndex) => txtDir.Text.Replace('/', '\\').TrimEnd('\\') + '\\' + gvResults.Rows[rowIndex].Cells[1].Value.ToString().TrimStart('.');
 
-		private void contextMenu_ClickOpenFolder(object sender, GVResultEventArgs e)
-		{
-			var filePath = gvResults.Rows[e.cellRow].Cells[1].Value.ToString();
+        private void OpenFileUsingExternalApp(int rowIndex)
+        {
+            var filePath = gvResults.Rows[rowIndex].Cells[1].Value.ToString();
 
+            string file = txtDir.Text + filePath.TrimStart('.');
+            Process.Start(file);
+        }
+
+        private void OpenFileFolder(int cellRow)
+		{
+			var filePath = gvResults.Rows[cellRow].Cells[1].Value.ToString();
 			string argument = @"/select, " + txtDir.Text + filePath.TrimStart('.');
 			Process.Start("explorer.exe", argument);
 		}
@@ -965,7 +970,7 @@ namespace FindAndReplace.App
             txtExcludeDir.Enabled = chkIncludeSubDirectories.Checked;
         }
 
-        #region Drag n Drop
+        #region Drag-n-Drop
 
         private Rectangle _dragBox = Rectangle.Empty;
         private int _mouseDownRowIndex = -1;
@@ -979,9 +984,7 @@ namespace FindAndReplace.App
             {
                 // create the drag box for threshold
                 Size dragSize = SystemInformation.DragSize;
-                _dragBox = new Rectangle(
-                    new Point(e.X - (dragSize.Width / 2), e.Y - (dragSize.Height / 2)),
-                    dragSize);
+                _dragBox = new Rectangle(new Point(e.X - (dragSize.Width / 2), e.Y - (dragSize.Height / 2)), dragSize);
             }
             else
             {
@@ -994,14 +997,14 @@ namespace FindAndReplace.App
             if (e.Button != MouseButtons.Left || _dragBox == Rectangle.Empty || _dragBox.Contains(e.Location))
                 return;
 
-            // If user hasn’t selected the row yet, select it now.
+            // If user hasn't selected the row yet, select it now.
             if (_mouseDownRowIndex >= 0 && !gvResults.Rows[_mouseDownRowIndex].Selected)
             {
                 gvResults.ClearSelection();
                 gvResults.Rows[_mouseDownRowIndex].Selected = true;
             }
 
-            // Collect file paths from selected rows (assumes column 0 holds full paths)
+            // Collect file paths from selected rows
             var paths = gvResults.SelectedRows.Cast<DataGridViewRow>().Select(r => Convert.ToString(r.Cells[1].Value)).Where(p => !string.IsNullOrWhiteSpace(p)).ToArray();
 
             if (paths.Length == 0)
@@ -1013,14 +1016,12 @@ namespace FindAndReplace.App
 				paths[i] = txtDir.Text.Replace('/', '\\').TrimEnd('\\') + '\\' + paths[i].TrimStart('.');
             }
 
-            paths = paths.Where(File.Exists).ToArray();
+            paths = paths.Where(File.Exists).Where(Path.IsPathRooted).Distinct().ToArray();
             if (paths.Length == 0)
 				return;
 
-            var data = new DataObject();
-            data.SetData(DataFormats.FileDrop, paths); // primary: files for Explorer, browsers, etc.
-            data.SetData(DataFormats.UnicodeText, string.Join(Environment.NewLine, paths)); // nice-to-have for text targets
-            DoDragDrop(data, DragDropEffects.Copy);
+            var dataObject = new DataObject(DataFormats.FileDrop, paths);
+            DoDragDrop(dataObject, DragDropEffects.Copy);
         }
 
         #endregion

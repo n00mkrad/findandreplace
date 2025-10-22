@@ -6,6 +6,22 @@ using System.Text.RegularExpressions;
 
 namespace FindAndReplace
 {
+    public class ProcessorEventArgs<TResultItem> : EventArgs where TResultItem : ResultItem
+    {
+        public TResultItem ResultItem { get; set; }
+        public Stats Stats { get; set; }
+        public Status Status { get; set; }
+        public bool IsSilent { get; set; }
+
+        public ProcessorEventArgs(TResultItem resultItem, Stats stats, Status status, bool isSilent = false)
+        {
+            ResultItem = resultItem;
+            Stats = stats;
+            Status = status;
+            IsSilent = isSilent;
+        }
+    }
+
     public abstract class ProcessorBase<TResultItem> where TResultItem : ResultItem, new()
     {
         public string Dir { get; set; }
@@ -96,7 +112,7 @@ namespace FindAndReplace
             }
             else
             {
-                if (resultItem.FailedToOpen)
+                if (resultItem.FailedToReadWrite)
                     Stats.Files.FailedToRead++;
 
                 if (resultItem.IsBinaryFile)
@@ -124,7 +140,7 @@ namespace FindAndReplace
             catch (Exception exception)
             {
                 resultItem.IsSuccess = false;
-                resultItem.FailedToOpen = true;
+                resultItem.FailedToReadWrite = true;
                 resultItem.ErrorMessage = exception.Message;
                 return resultItem;
             }
@@ -140,7 +156,7 @@ namespace FindAndReplace
             if (encoding == null)
             {
                 resultItem.IsSuccess = false;
-                resultItem.FailedToOpen = true;
+                resultItem.FailedToReadWrite = true;
                 resultItem.ErrorMessage = "Could not detect file encoding.";
                 return resultItem;
             }

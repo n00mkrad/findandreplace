@@ -1,114 +1,122 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace FindAndReplace
 {
-    public class ReplacerEventArgs : EventArgs
-    {
-        public Replacer.ReplaceResultItem ResultItem { get; set; }
-        public Stats Stats { get; set; }
-        public Status Status { get; set; }
-        public bool IsSilent { get; set; }
+	public delegate void ReplacerFileProcessedEventHandler(object sender, ProcessorEventArgs<Replacer.ReplaceResultItem> e);
 
-        public ReplacerEventArgs(Replacer.ReplaceResultItem resultItem, Stats stats, Status status, bool isSilent = false)
-        {
-            ResultItem = resultItem;
-            Stats = stats;
-            Status = status;
-            IsSilent = isSilent;
-        }
-    }
+	public class Replacer : ProcessorBase<Replacer.ReplaceResultItem>
+	{
+		public class ReplaceResultItem : ResultItem
+		{
+			public int NumReplaces { get; set; }
+			public bool IsReplaced { get; set; }
+		}
 
-    public delegate void ReplaceFileProcessedEventHandler(object sender, ReplacerEventArgs e);
+		public class ReplaceResult
+		{
+			public List<ReplaceResultItem> ResultItems { get; set; }
+			public Stats Stats { get; set; }
+		}
 
-    public class Replacer : ProcessorBase<Replacer.ReplaceResultItem>
-    {
-        public string ReplaceText { get; set; }
+		public string ReplaceText { get; set; }
 
-        public class ReplaceResultItem : ResultItem
-        {
-            public bool FailedToWrite { get; set; }
-        }
+		public ReplaceResult Replace()
+		{
+			Verify.Argument.IsNotNull(ReplaceText, "ReplaceText");
 
-        public class ReplaceResult
-        {
-            public List<ReplaceResultItem> ResultItems { get; set; }
+			var resultItems = Process();
+			return new ReplaceResult { ResultItems = resultItems, Stats = Stats };
+		}
 
-            public Stats Stats { get; set; }
-        }
+		protected override void PerformOperation(ReplaceResultItem resultItem, string fileContent, RegexOptions regexOptions)
+		{
+			// string newFileContent;
 
-        public ReplaceResult Replace()
-        {
-            Verify.Argument.IsNotNull(ReplaceText, "ReplaceText");
-            var resultItems = Process();
-            return new ReplaceResult { ResultItems = resultItems, Stats = Stats };
-        }
+            // if (FindTextHasRegEx)
+            // {
+            // 	string replacement = UseEscapeChars ? Regex.Unescape(ReplaceText) : ReplaceText;
+            // 	newFileContent = Regex.Replace(fileContent, FindText, replacement, regexOptions);
+            // }
+            // else
+            // {
+            // 	newFileContent = fileContent.Replace(FindText, ReplaceText,
+            // 	                                     IsCaseSensitive
+            // 		                                     ? StringComparison.InvariantCulture
+            // 		                                     : StringComparison.InvariantCultureIgnoreCase);
+            // }
 
-        protected override void PerformOperation(ReplaceResultItem resultItem, string fileContent, RegexOptions regexOptions)
-        {
             string escapedFindText = FindText;
+
             if (!FindTextHasRegEx && !UseEscapeChars)
                 escapedFindText = Regex.Escape(FindText);
 
-            string newContent = Regex.Replace(fileContent, escapedFindText, UseEscapeChars ? Regex.Unescape(ReplaceText) : ReplaceText, regexOptions);
+            string newFileContent = Regex.Replace(fileContent, escapedFindText, UseEscapeChars ? Regex.Unescape(ReplaceText) : ReplaceText, regexOptions);
 
-            DateTime dt = DateTime.Now;
+            if (newFileContent != fileContent)
+			{
+				try
+				{
+					WriteFile(resultItem.FilePath, newFileContent, resultItem.FileEncoding);
+					resultItem.IsReplaced = true;
+				}
+				catch (Exception e)
+				{
+					resultItem.IsSuccess = false;
+					resultItem.ErrorMessage = e.Message;
+				}
+			}
 
-            try
-            {
-                if (IsKeepModifiedDate)
-                {
-                    dt = File.GetLastWriteTime(resultItem.FilePath);
-                }
+			resultItem.NumReplaces = resultItem.NumMatches; //In this version of app number of replaces is the same as number of matches
+		}
 
-                using (var sw = new StreamWriter(resultItem.FilePath, false, resultItem.FileEncoding))
-                {
-                    sw.Write(newContent);
-                }
+		private void WriteFile(string filePath, string content, Encoding encoding)
+		{
+			if (IsKeepModifiedDate)
+			{
+				var lastWriteTime = File.GetLastWriteTime(filePath);
+				File.WriteAllText(filePath, content, encoding);
+				File.SetLastWriteTime(filePath, lastWriteTime);
+			}
+			else
+			{
+				File.WriteAllText(filePath, content, encoding);
+			}
+		}
 
-                if (IsKeepModifiedDate)
-                {
-                    File.SetLastWriteTime(resultItem.FilePath, dt);
-                }
-            }
-            catch (Exception ex)
-            {
-                resultItem.IsSuccess = false;
-                resultItem.FailedToWrite = true;
-                resultItem.ErrorMessage = ex.Message;
-            }
-        }
+		protected override void UpdateStats(ReplaceResultItem resultItem)
+		{
+			base.UpdateStats(resultItem);
 
-        protected override void UpdateStats(ReplaceResultItem resultItem)
-        {
-            base.UpdateStats(resultItem);
+			if (resultItem.IsSuccess)
+			{
+				if (resultItem.IsReplaced)
+					Stats.Matches.Replaced += resultItem.NumReplaces;
+			}
+			else
+			{
+				if (!resultItem.FailedToReadWrite && !resultItem.IsBinaryFile) //If we failed to open or it is a binary file, it is already counted
+					Stats.Files.FailedToWrite++;
+			}
+		}
 
-            if (resultItem.IsSuccess && resultItem.NumMatches > 0)
-            {
-                Stats.Matches.Replaced += resultItem.NumMatches;
-            }
-            else if (!resultItem.IsSuccess)
-            {
-                if (resultItem.FailedToWrite)
-                    Stats.Files.FailedToWrite++;
-            }
-        }
+		public event ReplacerFileProcessedEventHandler FileProcessed;
 
-        public event ReplaceFileProcessedEventHandler FileProcessed;
+		protected override void OnFileProcessed(ReplaceResultItem resultItem)
+		{
+			FileProcessed?.Invoke(this, new ProcessorEventArgs<ReplaceResultItem>(resultItem, Stats, Status, IsSilent));
+		}
 
-        protected override void OnFileProcessed(ReplaceResultItem resultItem)
-        {
-            FileProcessed?.Invoke(this, new ReplacerEventArgs(resultItem, Stats, Status, IsSilent));
-        }
-
-        public string GenCommandLine(bool showEncoding)
-        {
-            return CommandLineUtils.GenerateCommandLine(Dir, FileMask, ExcludeFileMask, ExcludeDir, IncludeSubDirectories, IsCaseSensitive,
-                                                        FindTextHasRegEx, SkipBinaryFileDetection, showEncoding,
-                                                        IncludeFilesWithoutMatches, UseEscapeChars, AlwaysUseEncoding, FindText,
-                                                        ReplaceText, IsKeepModifiedDate);
-        }
-    }
+		public string GenCommandLine(bool showEncoding)
+		{
+			return CommandLineUtils.GenerateCommandLine(Dir, FileMask, ExcludeFileMask, ExcludeDir, IncludeSubDirectories, IsCaseSensitive,
+														FindTextHasRegEx, SkipBinaryFileDetection, showEncoding,
+														IncludeFilesWithoutMatches, UseEscapeChars, AlwaysUseEncoding, FindText,
+														ReplaceText, IsKeepModifiedDate);
+		}
+	}
 }

@@ -16,7 +16,7 @@ namespace FindAndReplace
         public List<LiteMatch> Matches { get; set; }
         public bool IsSuccess { get; set; }
         public bool IsBinaryFile { get; set; }
-        public bool FailedToOpen { get; set; }
+        public bool FailedToReadWrite { get; set; }
         public string ErrorMessage { get; set; }
 
         internal bool IncludeFilesWithoutMatches { get; set; }
@@ -37,11 +37,6 @@ namespace FindAndReplace
 
                 return false;
             }
-        }
-
-        public bool IsReplaced
-        {
-            get { return this.IsSuccess && this.NumMatches > 0; }  //Account for case when no matches found
         }
     }
 }
