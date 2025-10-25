@@ -25,10 +25,7 @@ namespace FindAndReplace
         {
             get
             {
-                if (IsSuccess && NumMatches == 0 && IncludeFilesWithoutMatches)
-                    return true;
-
-                if (IsSuccess && NumMatches > 0)
+                if (IsSuccess && (NumMatches > 0 || (NumMatches == 0 && IncludeFilesWithoutMatches)))
                     return true;
 
                 // NMKD
